@@ -219,32 +219,75 @@ class _MyplacesState extends State<Myplaces> {
     );
   }
 
-  Future<void> getPlace() async {
-    status = "Fetching places...";
-    isLoading = true;
-    setState(() {});
+ void getPlace() async {
+  placeList = [];
+  isLoading = true;
+  setState(() {});
 
-    try {
-      final response = await http.get(
-        Uri.parse(
-          'https://slumberjer.com/teaching/a251/locations.php?state=&category=&name=',
-        ),
-      );
+  status = "Fetching places...";
 
-      if (response.statusCode == 200) {
-        var data = response.body;
-        placeList = json.decode(data);
-        status = "Places loaded.";
-      } else {
-        print('Failed to load places');
-        status = "Failed to load places. Please try again later.";
-      }
-    } catch (error) {
-      print('Error: $error');
-      status = "Connection error. Please check your internet.";
-    } finally {
+  try {
+    final response = await http
+        .get(
+          Uri.parse(
+            'https://slumberjer.com/teaching/a251/locations.php?state=&category=&name=',
+          ),
+        )
+        .timeout(
+          const Duration(seconds: 20),
+          onTimeout: () {
+            print('Error getting places: Timeout');
+            status = 'Error getting places: Timeout';
+            isLoading = false;
+            setState(() {});
+            return http.Response('Error', 408); // return timeout response
+          },
+        );
+
+    if (response.statusCode != 200) {
+      print('Error getting places: ${response.statusCode}');
+      status = 'Error getting places: ${response.statusCode}';
       isLoading = false;
       setState(() {});
+      return;
     }
+
+    if (response.body.isEmpty) {
+      print('Error getting places: Empty response');
+      status = 'Error getting places: Empty response';
+      isLoading = false;
+      setState(() {});
+      return;
+    }
+
+    if (response.body.contains('error')) {
+      print('Error getting places: ${response.body}');
+      status = 'Error getting places: ${response.body}';
+      isLoading = false;
+      setState(() {});
+      return;
+    }
+
+    final data = json.decode(response.body);
+
+    if (data is! List || data.isEmpty) {
+      print('Error getting places: No data found');
+      status = 'No places found.';
+      placeList = [];
+      isLoading = false;
+      setState(() {});
+      return;
+    }
+    
+    placeList = data;
+    status = 'Places loaded successfully.';
+  } catch (error) {
+    print('Error getting places: $error');
+    status = 'Connection error. Please check your internet.';
+  } finally {
+    isLoading = false;
+    setState(() {});
   }
+}
+
 }
