@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_midterm/places.dart';
 import 'package:http/http.dart' as http;
 
 class Myplaces extends StatefulWidget {
@@ -12,7 +13,7 @@ class Myplaces extends StatefulWidget {
 }
 
 class _MyplacesState extends State<Myplaces> {
-  List<dynamic> placeList = [];
+  List<Place> placeList = [];
   String status = "Press the button to get place.";
   bool isLoading = false;
   @override
@@ -60,12 +61,7 @@ class _MyplacesState extends State<Myplaces> {
                           child: ListView.builder(
                             itemCount: placeList.length,
                             itemBuilder: (context, index) {
-                              String placeName = placeList[index]['name'];
-                              String state = placeList[index]['state'];
-                              String imageUrl = placeList[index]['image_url'];
-                              double rating = (placeList[index]['rating'] ?? 0)
-                                  .toDouble();
-
+                              Place place = placeList[index];
                               return SizedBox(
                                 height: 220,
                                 child: Card(
@@ -90,7 +86,7 @@ class _MyplacesState extends State<Myplaces> {
                                             ),
                                           ),
                                           child: Image.network(
-                                            imageUrl,
+                                            place.imageUrl,
                                             width: 150,
                                             height: 150,
                                             fit: BoxFit.cover,
@@ -111,16 +107,16 @@ class _MyplacesState extends State<Myplaces> {
                                           children: [
                                             SizedBox(height: 20),
                                             Text(
-                                              placeName,
+                                              place.name,
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 20,
                                               ),
                                             ),
                                             SizedBox(height: 15),
-                                            Text('State: $state',
+                                            Text('State: $place.state',
                                             style: TextStyle(fontSize: 16),),
-                                            Text('Rating: $rating',
+                                            Text('Rating: $place.rating',
                                             style: TextStyle(fontSize: 16),),
                                           ],
                                         ),
@@ -132,15 +128,8 @@ class _MyplacesState extends State<Myplaces> {
                                             showDialog(
                                               context: context,
                                               builder: (context) {
-                                                String description = placeList[index]['description'];
-                                                String contact =
-                                                    placeList[index]['contact'];
-                                                double latitude = double.tryParse(placeList[index]['latitude'].toString(), ) ??0.0;
-                                                double longitude = double.tryParse(placeList[index]['longitude'].toString(),) ??0.0;
-                                                String category = placeList[index]['category'];
-
                                                 return AlertDialog(
-                                                  title: Text(placeName,
+                                                  title: Text(place.name,
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.bold
                                                   ),),
@@ -161,7 +150,7 @@ class _MyplacesState extends State<Myplaces> {
                                                                 ),
                                                               ),
                                                               child: Image.network(
-                                                                imageUrl,
+                                                                place.imageUrl,
                                                                 width: 250,
                                                                 height: 280,
                                                                 fit: BoxFit.cover,
@@ -174,18 +163,18 @@ class _MyplacesState extends State<Myplaces> {
                                                           ),
                                                           SizedBox(height: 10),
                                                           Text('Description: ',style: TextStyle(fontWeight:FontWeight.bold),),
-                                                          Text(description),
+                                                          Text(place.description),
                                                           SizedBox(height: 5),
                                                           Text('Contact: ',style: TextStyle(fontWeight:FontWeight.bold,),),
-                                                          Text(contact),
+                                                          Text(place.contact),
                                                           SizedBox(height: 5,),
                                                           Text('Location: ',
                                                             style: TextStyle(fontWeight:FontWeight.bold),),
-                                                          Text('Latitude: $latitude'),
-                                                          Text('Longitude: $longitude '),
+                                                          Text('Latitude: $place.latitude'),
+                                                          Text('Longitude: $place.longitude '),
                                                           SizedBox(height: 5,),
                                                           Text('Category: ',style: TextStyle(fontWeight:FontWeight.bold),),
-                                                          Text(category),
+                                                          Text(place.category),
                                                         ],
                                                       ),
                                                     ),
@@ -279,7 +268,7 @@ class _MyplacesState extends State<Myplaces> {
       return;
     }
     
-    placeList = data;
+    placeList = data.map<Place>((item) => Place.fromJson(item)).toList();
     status = 'Places loaded successfully.';
   } catch (error) {
     print('Error getting places: $error');
